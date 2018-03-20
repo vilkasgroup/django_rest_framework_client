@@ -4,9 +4,19 @@ var _restClient = require('./restClient');
 
 var _restClient2 = _interopRequireDefault(_restClient);
 
+var _mockLocalStorage = require('mock-local-storage');
+
+var _mockLocalStorage2 = _interopRequireDefault(_mockLocalStorage);
+
+require('isomorphic-fetch');
+
 var _types = require('admin-on-rest/lib/rest/types');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+global.window = {};
+window.localStorage = global.localStorage;
+window.localStorage.setItem('token', 'b65f9fec09ce8c94eafa50dbbf64ceaae6963e88');
 
 var fakeHttpClient = function fakeHttpClient(url) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -33,7 +43,7 @@ var fakeHttpClient = function fakeHttpClient(url) {
     }
 };
 
-var client = (0, _restClient2.default)('localhost:8000/api', fakeHttpClient);
+var client = (0, _restClient2.default)('http://localhost:8000/api');
 client(_types.GET_LIST, 'users', {
     pagination: {},
     sort: {},

@@ -1,4 +1,6 @@
 import restClient from './restClient';
+import localStorage from 'mock-local-storage'
+import "isomorphic-fetch"
 import {
     GET_LIST,
     GET_ONE,
@@ -9,10 +11,20 @@ import {
     DELETE,
 } from 'admin-on-rest/lib/rest/types';
 
+global.window = {}
+window.localStorage = global.localStorage
+window.localStorage.setItem('token', 'b65f9fec09ce8c94eafa50dbbf64ceaae6963e88');
+
+
+
 const fakeHttpClient = (url, options = {}) => {
     // Currently this is really dumb method, that returns
     // response according to the http method. It doesn't know
     // if you are trying to get list or single item etc.
+    //
+    // For now, we are going to use an actual server (app vilkas_integrations).
+    // Once we have more example request, we can add the responses here, so this test can
+    // be run without server.
     const response_map = {
         'GET': [
             {
@@ -35,7 +47,7 @@ const fakeHttpClient = (url, options = {}) => {
     }
 };
 
-const client = restClient('localhost:8000/api', fakeHttpClient);
+const client = restClient('http://localhost:8000/api');
 client(GET_LIST, 'users',{
     pagination: {},
     sort: {},
