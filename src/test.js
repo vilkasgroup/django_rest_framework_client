@@ -1,6 +1,8 @@
+import assert from 'assert';
+var expect = require('chai').expect;
 import restClient from './restClient';
-import localStorage from 'mock-local-storage'
-import "isomorphic-fetch"
+import localStorage from 'mock-local-storage';
+import "isomorphic-fetch";
 import {
     GET_LIST,
     GET_ONE,
@@ -11,10 +13,13 @@ import {
     DELETE,
 } from 'admin-on-rest/lib/rest/types';
 
-global.window = {}
-window.localStorage = global.localStorage
-window.localStorage.setItem('token', 'b65f9fec09ce8c94eafa50dbbf64ceaae6963e88');
+global.window = {};
+window.localStorage = global.localStorage;
+window.localStorage.setItem('token', 'cdf564def8a97170bb5b4a28f9564df08235f50c');
 
+
+// Well this doesn't work for some reason...
+assert.equal(1, 1);
 
 
 const fakeHttpClient = (url, options = {}) => {
@@ -48,10 +53,62 @@ const fakeHttpClient = (url, options = {}) => {
 };
 
 const client = restClient('http://localhost:8000/api');
-client(GET_LIST, 'users',{
-    pagination: {},
-    sort: {},
-    filter: {}
-}).then(response => console.log('RESPONSE: ', response));
 
 
+// I don't really like the way we're testing these. Too much boilerplate,
+// and it's hard to read. Need to check later, if we should use another
+// library for testing.
+describe('test get methods', function () {
+    // This is a shorthand for what is explained here:
+    // https://stackoverflow.com/questions/11235815
+    // Note that you can only run 1 test with this.
+    // If you need more, you need to include the try block in
+    // to your test code. See test below for an example.
+    function expect_to_eq(a, b, done){
+        const expect_a_to_eq_b = (a, b) => expect(a).to.eq(b);
+        try{
+            expect_a_to_eq_b(a,b);
+            done();
+        }catch(e){
+            done(e);
+        }
+    }
+
+    it('should return list of items', function(done){
+        client(GET_LIST, 'users',{
+            pagination: {},
+            sort: {},
+            filter: {}
+        }).then(response => {
+            try {
+                expect(response.data[0].id).to.eq(1);
+                expect(response.data.length).to.eq(1);
+                done();
+            } catch( e ) {
+                done( e );
+            }
+        });
+    });
+
+
+
+    it('should return one item', function(done){
+        client(GET_ONE, 'users', { id: 1 }).then(response => {
+            expect_to_eq(response.data.id, 1, done);
+        });
+    });
+
+    it('should throw 404 error', function(done){
+        client(GET_ONE, 'users', { id: 999 }).then(
+            response => {
+                console.error('This promise was supposed to be rejected');
+                expect_to_eq(true, false, done);
+            },
+            error => {
+                expect_to_eq(error.message, 'Not found.', done);
+            }
+        );
+    });
+
+
+});

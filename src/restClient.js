@@ -21,9 +21,24 @@ const fetchJsonWithToken = (url, options = {}) => {
     return fetchUtils.fetchJson(url, options);
 };
 
-
+/**
+ * Maps admin-on-rest queries to a Django REST Framework (DRF) powered REST API
+ *
+ * @see 
+ * http://www.django-rest-framework.org/ 
+ * https://github.com/marmelab/admin-on-rest/blob/master/docs/RestClients.md
+ * @example
+ * GET_LIST     => GET http://my.api.url/posts/?_sort=title&_order=ASC&_start=0&_end=24
+ * GET_ONE      => GET http://my.api.url/posts/123/
+ */
 export default (apiUrl, httpClient = fetchJsonWithToken ) => {
 
+    /**
+     * @param {String} type One of the constants appearing at the top if this file, e.g. 'UPDATE'
+     * @param {String} resource Name of the resource to fetch, e.g. 'posts'
+     * @param {Object} params The REST request params, depending on the type
+     * @returns {Object} { url, options } The HTTP request parameters
+     */
     const convertRESTRequestToHTTP = (type, resource, params) => {
         let url = '';
         let options = {};
@@ -45,12 +60,58 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
             options.method = 'GET';
             break;
         }
+        case GET_ONE:
+            url = `${apiUrl}/${resource}/${params.id}/`;
+            break;
         default:
             throw new Error(`Unsupported fetch action type ${type}`);
         }
         return {url, options};
     };
 
+    /**
+     * @param {Object} response HTTP response from fetch(). Includes status, header and json content.
+     * @param {String} type One of the constants appearing at the top if this file, e.g. 'UPDATE'
+     * @param {String} resource Name of the resource to fetch, e.g. 'posts'
+     * @param {Object} params The REST request params, depending on the type
+     * @returns {Object} REST response in json { data: json } form
+     */
+    const convertHTTPResponseToREST = (response, type, resource, params) => {
+        const { status, headers, json } = response;
+
+
+        switch (type){
+        case GET_LIST:
+        case GET_MANY_REFERENCE:
+            if (!headers.has('x-total-count')) {
+                throw new Error('The X-Total-Count header is missing in the HTTP Response.');
+            }
+            return {
+                data: json,
+                total: parseInt(headers.get('x-total-count'))
+            };
+        case GET_ONE:
+            return {data: json};
+        default:
+            throw new Error(`Unsupported fetch action type ${type}`);
+        }
+    };
+
+    const convertHTTPErrorToREST = (httpError) => {
+        const {status, body, name} = httpError;
+
+        if( typeof(body) === 'object' && body.detail){
+            httpError.message = body.detail;
+        }
+        return Promise.reject(httpError);
+    };
+
+    /**
+     * @param {string} type Request type, e.g GET_LIST
+     * @param {string} resource Resource name, e.g. "posts"
+     * @param {Object} payload Request parameters. Depends on the request type
+     * @returns {Promise} the Promise for a REST response
+     */
     return (type, resource, params) => {
         const { url, options } = convertRESTRequestToHTTP(
             type,
@@ -59,8 +120,8 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
         );
 
         return httpClient(url, options).then(
-            response => (response),
-            error => (error)
+            response => convertHTTPResponseToREST(response, type, resource, params),
+            httpError => convertHTTPErrorToREST(httpError)
         );
     };
 };
