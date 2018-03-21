@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/vilkasgroup/django_rest_framework_client.svg?branch=master)](https://travis-ci.org/vilkasgroup/django_rest_framework_client)
+
+
 # django_rest_framework_client
 Djang REST Framework client for admin-on-rest
 
