@@ -1,8 +1,13 @@
 {
-  "name": "admin-on-rest-django-rest-framework-client",
+  "name": "aor-django-rest-framework",
   "version": "1.0.0",
   "description": "Django REST Framework client for admin-on-rest",
-  "main": "restClient.js",
+  "main": "src/restClient.js",
+  "files": [
+    "LICENSE",
+    "*.md",
+    "src/*"
+  ],
   "scripts": {
     "build": "babel src --out-dir dist --experimental",
     "test": "mocha dist/"
