@@ -1,12 +1,13 @@
 {
   "name": "aor-django-rest-framework",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Django REST Framework client for admin-on-rest",
   "main": "src/restClient.js",
   "files": [
     "LICENSE",
     "*.md",
-    "src/*"
+    "src/*",
+    "index.js"
   ],
   "scripts": {
     "build": "babel src --out-dir dist --experimental",

@@ -4,7 +4,7 @@ Djang REST Framework client for admin-on-rest
 ## Usage
     //Add these to your App.js
     ...
-    import DjangoRestClient from "django_rest_framework_client/restClient";
+    import DjangoRestClient from "aor-django-rest-framework";
     const restClient = DjangoRestClient("http://my.domain/api");
     ...
     const App = () => (
