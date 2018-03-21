@@ -1,6 +1,18 @@
 # django_rest_framework_client
 Djang REST Framework client for admin-on-rest
 
+## Usage
+    //Add these to your App.js
+    ...
+    import DjangoRestClient from "django_rest_framework_client/restClient";
+    const restClient = DjangoRestClient("http://my.domain/api");
+    ...
+    const App = () => (
+       <Admin dashboard={Dashboard} restClient={restClient}>
+        ...
+
+    
+
 
 ## Installation and development
 
