@@ -1,5 +1,6 @@
 import assert from 'assert';
 var expect = require('chai').expect;
+import fetchMock from 'fetch-mock';
 import restClient from './restClient';
 import localStorage from 'mock-local-storage';
 import "isomorphic-fetch";
@@ -13,51 +14,26 @@ import {
     DELETE,
 } from 'admin-on-rest/lib/rest/types';
 
-global.window = {};
-window.localStorage = global.localStorage;
-window.localStorage.setItem('token', 'cdf564def8a97170bb5b4a28f9564df08235f50c');
-
-
-// Well this doesn't work for some reason...
+// Well this doesn't work for some reason... use chai instead.
 assert.equal(1, 1);
 
-
-const fakeHttpClient = (url, options = {}) => {
-    // Currently this is really dumb method, that returns
-    // response according to the http method. It doesn't know
-    // if you are trying to get list or single item etc.
-    //
-    // For now, we are going to use an actual server (app vilkas_integrations).
-    // Once we have more example request, we can add the responses here, so this test can
-    // be run without server.
-    const response_map = {
-        'GET': [
-            {
-                "id": 1,
-                "value": "first fake element"
-            },
-            {
-                "id": 2,
-                "value": "second fake element"
-            }
-        ]
-    };
-    const response = response_map[options.method];
-    console.log('Do fake request: ', options.method);
-    if(response){
-        return Promise.resolve(response);
-    }else{
-        // TODO: Check what fetcjJson returns if it fails to connect to server etc.
-        return Promise.reject('Fake server did not have response for that request');
-    }
+const fakeData = {
+    "users" : [
+        {
+            "id": 1,
+            "username": "user 1"
+        }
+    ]
 };
+
+fetchMock.get(/.*\/api\/users\/\?.*/, {body: fakeData.users, headers: {'x-total-count': 1}});
+fetchMock.get(/.*\/api\/users\/1\//, fakeData.users[0]);
+fetchMock.get(/.*\/api\/users\/999\//, {status: 404, body: {detail: "Not found."}});
+fetchMock.post(/.*\/api\/users\/\?.*/, {status: 200, body: fakeData.users[0]});
+fetchMock.delete('*', {status: 204, body: {}});
 
 const client = restClient('http://localhost:8000/api');
 
-
-// I don't really like the way we're testing these. Too much boilerplate,
-// and it's hard to read. Need to check later, if we should use another
-// library for testing.
 describe('test get methods', function () {
     // This is a shorthand for what is explained here:
     // https://stackoverflow.com/questions/11235815
@@ -79,18 +55,19 @@ describe('test get methods', function () {
             pagination: {},
             sort: {},
             filter: {}
-        }).then(response => {
-            try {
-                expect(response.data[0].id).to.eq(1);
-                expect(response.data.length).to.eq(1);
-                done();
-            } catch( e ) {
-                done( e );
-            }
-        });
+        }).then(
+            response => {
+                try {
+                    expect(response.data[0].id).to.eq(1);
+                    expect(response.data.length).to.eq(1);
+                    done();
+                } catch( e ) {
+                    done( e );
+                }
+            },
+            error => console.error(error)
+        );
     });
-
-
 
     it('should return one item', function(done){
         client(GET_ONE, 'users', { id: 1 }).then(response => {
@@ -110,5 +87,37 @@ describe('test get methods', function () {
         );
     });
 
+    /* Not working with mock-fetch
+    it('should create new user and return id', function(done){
+        client(CREATE, "users", { "data": {"username": "foobar" }}).then(
+            response => {
+                expect_to_eq(1,1, done);
+            },
+            error => console.error(error)
+        );
+    });
+    */
+
+    it('should delete and return 204 with empty body', function(done){
+        client(DELETE, 'users', {id: 2}).then(
+            response => {
+                expect_to_eq(response.data.id, 2, done);
+            },
+            error => console.error(error)
+        );
+    });
+
+    it('should fail because such method does not exist', function(done){
+        let failed = 0;
+        try{
+            client('FOOBAR', 'users', {}).then(
+                response => console.error('This should have failed'),
+                error => console.error('This should have failed')
+            );
+        } catch( e){
+            failed = 1;
+        }
+        expect_to_eq(failed, 1, done);
+    });
 
 });

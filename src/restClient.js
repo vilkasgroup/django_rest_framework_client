@@ -28,8 +28,12 @@ const fetchJsonWithToken = (url, options = {}) => {
  * http://www.django-rest-framework.org/ 
  * https://github.com/marmelab/admin-on-rest/blob/master/docs/RestClients.md
  * @example
+ * GET_MANY_REFERENCE
  * GET_LIST     => GET http://my.api.url/posts/?_sort=title&_order=ASC&_start=0&_end=24
  * GET_ONE      => GET http://my.api.url/posts/123/
+ * UPDATE       => PUT http://my.api.url/posts/123/
+ * CREATE       => POST http://my.api.url/posts/123/
+ * DELETE       => DELETE http://my.api.url/posts/123/
  */
 export default (apiUrl, httpClient = fetchJsonWithToken ) => {
 
@@ -44,6 +48,7 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
         let options = {};
 
         switch (type){
+        case GET_MANY_REFERENCE:
         case GET_LIST: {
             const page = params.pagination.page || 1;
             const perPage = params.pagination.perPage || 10;
@@ -63,6 +68,21 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
         case GET_ONE:
             url = `${apiUrl}/${resource}/${params.id}/`;
             break;
+        case UPDATE:
+            url = `${apiUrl}/${resource}/${params.id}/`;
+            options.method = 'PUT';
+            options.body = JSON.stringify(params.data);
+            break;
+        case CREATE:
+            url = `${apiUrl}/${resource}/`;
+            options.method = 'POST';
+            options.body = JSON.stringify(params.data);
+            break;
+        case DELETE:
+            url = `${apiUrl}/${resource}/${params.id}/`;
+            options.method = 'DELETE';
+            break;
+
         default:
             throw new Error(`Unsupported fetch action type ${type}`);
         }
@@ -90,6 +110,15 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
                 data: json,
                 total: parseInt(headers.get('x-total-count'))
             };
+
+        case DELETE:
+            if( status === 204 ){
+                return { data: {"id": params.id} };
+            }
+            throw new Error('Element not deleted');
+
+        case CREATE:
+        case UPDATE:
         case GET_ONE:
             return {data: json};
         default:

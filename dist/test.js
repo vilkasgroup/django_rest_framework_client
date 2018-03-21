@@ -4,6 +4,10 @@ var _assert = require('assert');
 
 var _assert2 = _interopRequireDefault(_assert);
 
+var _fetchMock = require('fetch-mock');
+
+var _fetchMock2 = _interopRequireDefault(_fetchMock);
+
 var _restClient = require('./restClient');
 
 var _restClient2 = _interopRequireDefault(_restClient);
@@ -21,47 +25,24 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var expect = require('chai').expect;
 
 
-global.window = {};
-window.localStorage = global.localStorage;
-window.localStorage.setItem('token', 'cdf564def8a97170bb5b4a28f9564df08235f50c');
-
-// Well this doesn't work for some reason...
+// Well this doesn't work for some reason... use chai instead.
 _assert2.default.equal(1, 1);
 
-var fakeHttpClient = function fakeHttpClient(url) {
-    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-    // Currently this is really dumb method, that returns
-    // response according to the http method. It doesn't know
-    // if you are trying to get list or single item etc.
-    //
-    // For now, we are going to use an actual server (app vilkas_integrations).
-    // Once we have more example request, we can add the responses here, so this test can
-    // be run without server.
-    var response_map = {
-        'GET': [{
-            "id": 1,
-            "value": "first fake element"
-        }, {
-            "id": 2,
-            "value": "second fake element"
-        }]
-    };
-    var response = response_map[options.method];
-    console.log('Do fake request: ', options.method);
-    if (response) {
-        return Promise.resolve(response);
-    } else {
-        // TODO: Check what fetcjJson returns if it fails to connect to server etc.
-        return Promise.reject('Fake server did not have response for that request');
-    }
+var fakeData = {
+    "users": [{
+        "id": 1,
+        "username": "user 1"
+    }]
 };
+
+_fetchMock2.default.get(/.*\/api\/users\/\?.*/, { body: fakeData.users, headers: { 'x-total-count': 1 } });
+_fetchMock2.default.get(/.*\/api\/users\/1\//, fakeData.users[0]);
+_fetchMock2.default.get(/.*\/api\/users\/999\//, { status: 404, body: { detail: "Not found." } });
+_fetchMock2.default.post(/.*\/api\/users\/\?.*/, { status: 200, body: fakeData.users[0] });
+_fetchMock2.default.delete('*', { status: 204, body: {} });
 
 var client = (0, _restClient2.default)('http://localhost:8000/api');
 
-// I don't really like the way we're testing these. Too much boilerplate,
-// and it's hard to read. Need to check later, if we should use another
-// library for testing.
 describe('test get methods', function () {
     // This is a shorthand for what is explained here:
     // https://stackoverflow.com/questions/11235815
@@ -93,6 +74,8 @@ describe('test get methods', function () {
             } catch (e) {
                 done(e);
             }
+        }, function (error) {
+            return console.error(error);
         });
     });
 
@@ -109,5 +92,38 @@ describe('test get methods', function () {
         }, function (error) {
             expect_to_eq(error.message, 'Not found.', done);
         });
+    });
+
+    /* Not working with mock-fetch
+    it('should create new user and return id', function(done){
+        client(CREATE, "users", { "data": {"username": "foobar" }}).then(
+            response => {
+                expect_to_eq(1,1, done);
+            },
+            error => console.error(error)
+        );
+    });
+    */
+
+    it('should delete and return 204 with empty body', function (done) {
+        client(_types.DELETE, 'users', { id: 2 }).then(function (response) {
+            expect_to_eq(response.data.id, 2, done);
+        }, function (error) {
+            return console.error(error);
+        });
+    });
+
+    it('should fail because such method does not exist', function (done) {
+        var failed = 0;
+        try {
+            client('FOOBAR', 'users', {}).then(function (response) {
+                return console.error('This should have failed');
+            }, function (error) {
+                return console.error('This should have failed');
+            });
+        } catch (e) {
+            failed = 1;
+        }
+        expect_to_eq(failed, 1, done);
     });
 });

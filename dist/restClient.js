@@ -35,8 +35,12 @@ var fetchJsonWithToken = function fetchJsonWithToken(url) {
  * http://www.django-rest-framework.org/ 
  * https://github.com/marmelab/admin-on-rest/blob/master/docs/RestClients.md
  * @example
+ * GET_MANY_REFERENCE
  * GET_LIST     => GET http://my.api.url/posts/?_sort=title&_order=ASC&_start=0&_end=24
  * GET_ONE      => GET http://my.api.url/posts/123/
+ * UPDATE       => PUT http://my.api.url/posts/123/
+ * CREATE       => POST http://my.api.url/posts/123/
+ * DELETE       => DELETE http://my.api.url/posts/123/
  */
 
 exports.default = function (apiUrl) {
@@ -54,6 +58,7 @@ exports.default = function (apiUrl) {
         var options = {};
 
         switch (type) {
+            case _types.GET_MANY_REFERENCE:
             case _types.GET_LIST:
                 {
                     var page = params.pagination.page || 1;
@@ -73,6 +78,21 @@ exports.default = function (apiUrl) {
             case _types.GET_ONE:
                 url = apiUrl + '/' + resource + '/' + params.id + '/';
                 break;
+            case _types.UPDATE:
+                url = apiUrl + '/' + resource + '/' + params.id + '/';
+                options.method = 'PUT';
+                options.body = JSON.stringify(params.data);
+                break;
+            case _types.CREATE:
+                url = apiUrl + '/' + resource + '/';
+                options.method = 'POST';
+                options.body = JSON.stringify(params.data);
+                break;
+            case _types.DELETE:
+                url = apiUrl + '/' + resource + '/' + params.id + '/';
+                options.method = 'DELETE';
+                break;
+
             default:
                 throw new Error('Unsupported fetch action type ' + type);
         }
@@ -102,6 +122,15 @@ exports.default = function (apiUrl) {
                     data: json,
                     total: parseInt(headers.get('x-total-count'))
                 };
+
+            case _types.DELETE:
+                if (status === 204) {
+                    return { data: { "id": params.id } };
+                }
+                throw new Error('Element not deleted');
+
+            case _types.CREATE:
+            case _types.UPDATE:
             case _types.GET_ONE:
                 return { data: json };
             default:
