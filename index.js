@@ -1,1 +1,1 @@
-export DjangoRestClient from './src/restClient';
+export { DjangoRestClient } from './src/restClient';
