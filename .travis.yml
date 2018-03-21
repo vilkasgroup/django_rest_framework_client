@@ -1,5 +1,13 @@
 language: node_js
-node_js: "9"
+node_js: '9'
 before_install: npm install
 install: npm run build
 script: npm run test
+deploy:
+  provider: npm
+  email: aleksi.wikman@gmail.com
+  api_key:
+    secure: SfErcMEA0gtxqcP/IzU/mFb+ddbiMY7htOff8K01TIQ4ofems+lUatu5cQtmRmZaQmYiJ0gw9TAVJ2o6GPYQhHdFLAAieTlVBsE8vAaiC4HJUn7lLsdOayS3yhNlzsSs+HNLRPqFQ4FJs1CsSsabaKLnHhBpQfXBztMgSlZn+6iPqTi6G9xLziXlO1VvY1n6AeHItDXeEEKN5SC9+ej65ZpntVq4/XL2XP7L8wK6Xc8nPDPo+EDBynpjhp/kLduTLylyI9IVQwyZb+CB/g65nwFRGLN4pNhgoH6s4Ob/aQCs6jKvtgXBCLfOhsYPNkhwwXVV0Zcrpl/9uMEqX7qi1VPc3IaR5RPJ5C+GfjjvkM/GDp2YC2xH0OieVvZWXHKr335wxAKnCv8SW8Odf3Hu2nPNFg4y3i56KRp4Rm2zegiqhU7R8DezikGL3/s8wnjKZSqeNQO0DY+LfSgpEHOjTo6OK5th3uuDYJQOJpDgjm57t2LckelPRtgnBJ/okNLP0rHiCV+2I4xPICFuSGt7UlzlO2JF7cDBadqwHvnfuHEyElSQ9DyQOYVVFpTBUZ84SsXSYcIUhCEuECWAfeLuU863jcmqZV6FKKz4FK4KJl2N+bVQuY/z6qRYkdqJU44sUsfKQ87yF3/rHKIXrrjCr7dGFPuQEZnu5fR90Zr9KDU=
+  on:
+    tags: true
+    repo: vilkasgroup/django_rest_framework_client
