@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/vilkasgroup/django_rest_framework_client.svg?branch=master)](https://travis-ci.org/vilkasgroup/django_rest_framework_client)
-
 [![Coverage Status](https://coveralls.io/repos/github/vilkasgroup/django_rest_framework_client/badge.svg?branch=master)](https://coveralls.io/github/vilkasgroup/django_rest_framework_client?branch=master)
 
 # django_rest_framework_client
