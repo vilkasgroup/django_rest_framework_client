@@ -26,10 +26,12 @@ const fakeData = {
     ]
 };
 
+global.FormData = require('FormData');
 fetchMock.get(/.*\/api\/users\/\?.*/, {body: fakeData.users, headers: {'x-total-count': 1}});
 fetchMock.get(/.*\/api\/users\/1\//, fakeData.users[0]);
 fetchMock.get(/.*\/api\/users\/999\//, {status: 404, body: {detail: "Not found."}});
-fetchMock.post(/.*\/api\/users\/\?.*/, {status: 200, body: fakeData.users[0]});
+fetchMock.post(/.*\/api\/users\//, {status: 200, body: fakeData.users[0]});
+fetchMock.put(/.*\/api\/users\/1\//, {status: 200, body: fakeData.users[0]});
 fetchMock.delete('*', {status: 204, body: {}});
 
 const client = restClient('http://localhost:8000/api');
@@ -87,7 +89,7 @@ describe('test get methods', function () {
         );
     });
 
-    /* Not working with mock-fetch
+    /* Not working with mock-fetch */
     it('should create new user and return id', function(done){
         client(CREATE, "users", { "data": {"username": "foobar" }}).then(
             response => {
@@ -96,7 +98,15 @@ describe('test get methods', function () {
             error => console.error(error)
         );
     });
-    */
+
+    it('should update existing user', function(done){
+        client(UPDATE, "users", { id: 1, "data": {username: "new username"}}).then(
+            response => {
+                expect_to_eq(1,1, done);
+            },
+            error => console.error(error)
+        );
+    });
 
     it('should delete and return 204 with empty body', function(done){
         client(DELETE, 'users', {id: 2}).then(
