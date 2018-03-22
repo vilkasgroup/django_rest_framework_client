@@ -10,3 +10,7 @@ deploy:
   on:
     tags: true
     repo: vilkasgroup/django_rest_framework_client
+
+after_success:
+ - npm run cover
+ - npm run coveralls
