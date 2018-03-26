@@ -5,11 +5,16 @@
 Djang REST Framework client for admin-on-rest
 
 ## Usage
-    //Add these to your App.js
-    ...
+
+Install the package from npmjs.com:
+
+    npm install aor-django-rest-framework --save
+
+Add these to your App.js
+
+
     import DjangoRestClient from "aor-django-rest-framework";
     const restClient = DjangoRestClient("http://my.domain/api");
-    ...
     const App = () => (
        <Admin dashboard={Dashboard} restClient={restClient}>
         ...
@@ -19,15 +24,15 @@ Djang REST Framework client for admin-on-rest
 
 ## Installation and development
 
-first install npm, and install required packages:
+first install npm, and install required packages, build and run tests
 
     npm install
-
-
-Then you need to build the modules. This will take the src from ./src/ and build them using babel:
-
     npm run build
-
-Then run the test
-
     npm run test
+
+Travis-ci handles the deployment to npmjs.com.
+To deploy a new version:
+
+ - increase the version number in package.json
+ - merge changes to master branch
+ - git tag the master branch with the same version number
