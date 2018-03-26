@@ -30,9 +30,6 @@ first install npm, and install required packages, build and run tests
     npm run build
     npm run test
 
-Travis-ci handles the deployment to npmjs.com.
-To deploy a new version:
-
- - increase the version number in package.json
- - merge changes to master branch
- - git tag the master branch with the same version number
+Travis-ci handles the deployment to npmjs.com from master branch.
+To deploy a new version, first bump packages with `npm version [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease | from-git]`.
+This will set the correct version to package.json, create a git commit, and set the correct git tag. Merge to master, and Travis will deploy it.
