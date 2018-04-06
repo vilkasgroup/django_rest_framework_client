@@ -28,6 +28,15 @@ const fakeData = {
 
 global.FormData = require('FormData');
 fetchMock.get(/.*\/api\/users\/\?.*/, {body: fakeData.users, headers: {'x-total-count': 1}});
+
+// If you use 'rest_framework.pagination.LimitOffsetPagination', it'll return it like this
+fetchMock.get(/.*\/api\/users_drf_paginator\/\?.*/, {body: {
+    count: 1,
+    next: null,
+    previous: null,
+    results: fakeData.users
+}});
+
 fetchMock.get(/.*\/api\/users\/1\//, fakeData.users[0]);
 fetchMock.get(/.*\/api\/users\/999\//, {status: 404, body: {detail: "Not found."}});
 fetchMock.post(/.*\/api\/users\//, {status: 200, body: fakeData.users[0]});
@@ -54,6 +63,25 @@ describe('test get methods', function () {
 
     it('should return list of items', function(done){
         client(GET_LIST, 'users',{
+            pagination: {},
+            sort: {},
+            filter: {}
+        }).then(
+            response => {
+                try {
+                    expect(response.data[0].id).to.eq(1);
+                    expect(response.data.length).to.eq(1);
+                    done();
+                } catch( e ) {
+                    done( e );
+                }
+            },
+            error => console.error(error)
+        );
+    });
+
+    it('should return list of items', function(done){
+        client(GET_LIST, 'users_drf_paginator',{
             pagination: {},
             sort: {},
             filter: {}
