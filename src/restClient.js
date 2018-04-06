@@ -104,10 +104,17 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
         case GET_LIST:
         case GET_MANY_REFERENCE:
             if (!headers.has('x-total-count')) {
-                throw new Error('The X-Total-Count header is missing in the HTTP Response.');
+                if( json.hasOwnProperty('count')){
+                    // For rest_framework.pagination.LimitOffsetPagination for pagination,
+                    headers.set('x-total-count', json.count);
+                }else{
+                    throw new Error('The X-Total-Count header is missing in the HTTP Response.');
+                }
             }
+            // For rest_framework.pagination.LimitOffsetPagination for pagination,
+            const data = json.results || json;
             return {
-                data: json,
+                data: data,
                 total: parseInt(headers.get('x-total-count'))
             };
 
