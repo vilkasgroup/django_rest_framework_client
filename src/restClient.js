@@ -59,7 +59,9 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
                 _sort: field,
                 _order: order,
                 _start: (page - 1) * perPage,
-                _end: page * perPage
+                _end: page * perPage,
+                // for LimitOffsetPagination
+                offset: (page - 1) * perPage
             };
             url = `${apiUrl}/${resource}/?${stringify(query)}`;
             options.method = 'GET';
