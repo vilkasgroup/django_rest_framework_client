@@ -59,7 +59,9 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
                 _sort: field,
                 _order: order,
                 _start: (page - 1) * perPage,
-                _end: page * perPage
+                _end: page * perPage,
+                // for LimitOffsetPagination
+                offset: (page - 1) * perPage
             };
             url = `${apiUrl}/${resource}/?${stringify(query)}`;
             options.method = 'GET';
@@ -103,12 +105,12 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
         switch (type){
         case GET_LIST:
         case GET_MANY_REFERENCE:
-            if (!headers.has('x-total-count')) {
-                throw new Error('The X-Total-Count header is missing in the HTTP Response.');
-            }
+            // For rest_framework.pagination.LimitOffsetPagination for pagination,
+            const data = json.results || json;
+            const count = parseInt(headers.get('x-total-count') || json.count);
             return {
-                data: json,
-                total: parseInt(headers.get('x-total-count'))
+                data: data,
+                total: count
             };
 
         case DELETE:
