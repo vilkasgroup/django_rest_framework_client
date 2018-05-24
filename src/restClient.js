@@ -107,7 +107,7 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
         case GET_MANY_REFERENCE:
             // For rest_framework.pagination.LimitOffsetPagination for pagination,
             const data = json.results || json;
-            const count = parseInt(headers.get('x-total-count') || json.count);
+            const count = parseInt(headers.get('x-total-count') || json.count || json.length);
             return {
                 data: data,
                 total: count
