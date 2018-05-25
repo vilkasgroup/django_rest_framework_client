@@ -58,9 +58,9 @@ export default (apiUrl, httpClient = fetchJsonWithToken) => {
                 const query = {
                     ...flattenObject(params.filter),
                     ordering: order + field,
-                    _start: (page - 1) * perPage,
-                    _end: page * perPage,
-                    // for LimitOffsetPagination
+                    // The limit indicates the maximum number of items to return
+                    limit: perPage,
+                    // for LimitOffsetPagination. The offset indicates the starting position of the query in relation
                     offset: (page - 1) * perPage
                 };
                 url = `${apiUrl}/${resource}/?${stringify(query)}`;
