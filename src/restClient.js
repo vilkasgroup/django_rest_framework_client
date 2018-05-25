@@ -12,7 +12,7 @@ import {
 } from 'admin-on-rest/lib/rest/types';
 
 const fetchJsonWithToken = (url, options = {}) => {
-    if(localStorage.getItem('token')) {
+    if (localStorage.getItem('token')) {
         options.user = {
             authenticated: true,
             token: 'Token ' + localStorage.getItem('token')
@@ -35,7 +35,7 @@ const fetchJsonWithToken = (url, options = {}) => {
  * CREATE       => POST http://my.api.url/posts/123/
  * DELETE       => DELETE http://my.api.url/posts/123/
  */
-export default (apiUrl, httpClient = fetchJsonWithToken ) => {
+export default (apiUrl, httpClient = fetchJsonWithToken) => {
 
     /**
      * @param {String} type One of the constants appearing at the top if this file, e.g. 'UPDATE'
@@ -47,48 +47,48 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
         let url = '';
         let options = {};
 
-        switch (type){
-        case GET_MANY_REFERENCE:
-        case GET_LIST: {
-            const page = params.pagination.page || 1;
-            const perPage = params.pagination.perPage || 10;
-            const field = params.sort.field || 'id';
-            const order = params.sort.order || 'ASC';
-            const query = {
-                ...flattenObject(params.filter),
-                _sort: field,
-                _order: order,
-                _start: (page - 1) * perPage,
-                _end: page * perPage,
-                // for LimitOffsetPagination
-                offset: (page - 1) * perPage
-            };
-            url = `${apiUrl}/${resource}/?${stringify(query)}`;
-            options.method = 'GET';
-            break;
-        }
-        case GET_ONE:
-            url = `${apiUrl}/${resource}/${params.id}/`;
-            break;
-        case UPDATE:
-            url = `${apiUrl}/${resource}/${params.id}/`;
-            options.method = 'PUT';
-            options.body = JSON.stringify(params.data);
-            break;
-        case CREATE:
-            url = `${apiUrl}/${resource}/`;
-            options.method = 'POST';
-            options.body = JSON.stringify(params.data);
-            break;
-        case DELETE:
-            url = `${apiUrl}/${resource}/${params.id}/`;
-            options.method = 'DELETE';
-            break;
+        switch (type) {
+            case GET_MANY_REFERENCE:
+            case GET_LIST: {
+                const page = params.pagination.page || 1;
+                const perPage = params.pagination.perPage || 10;
+                // specify reverse orderings by prefixing the field name with '-'
+                const order = params.sort.order == 'DESC' ? '-' : '';
+                const field = params.sort.field || 'id';
+                const query = {
+                    ...flattenObject(params.filter),
+                    ordering: order + field,
+                    // The limit indicates the maximum number of items to return
+                    limit: perPage,
+                    // for LimitOffsetPagination. The offset indicates the starting position of the query in relation
+                    offset: (page - 1) * perPage
+                };
+                url = `${apiUrl}/${resource}/?${stringify(query)}`;
+                options.method = 'GET';
+                break;
+            }
+            case GET_ONE:
+                url = `${apiUrl}/${resource}/${params.id}/`;
+                break;
+            case UPDATE:
+                url = `${apiUrl}/${resource}/${params.id}/`;
+                options.method = 'PUT';
+                options.body = JSON.stringify(params.data);
+                break;
+            case CREATE:
+                url = `${apiUrl}/${resource}/`;
+                options.method = 'POST';
+                options.body = JSON.stringify(params.data);
+                break;
+            case DELETE:
+                url = `${apiUrl}/${resource}/${params.id}/`;
+                options.method = 'DELETE';
+                break;
 
-        default:
-            throw new Error(`Unsupported fetch action type ${type}`);
+            default:
+                throw new Error(`Unsupported fetch action type ${type}`);
         }
-        return {url, options};
+        return { url, options };
     };
 
     /**
@@ -101,37 +101,36 @@ export default (apiUrl, httpClient = fetchJsonWithToken ) => {
     const convertHTTPResponseToREST = (response, type, resource, params) => {
         const { status, headers, json } = response;
 
+        switch (type) {
+            case GET_LIST:
+            case GET_MANY_REFERENCE:
+                // For rest_framework.pagination.LimitOffsetPagination for pagination,
+                const data = json.results || json;
+                const count = parseInt(headers.get('x-total-count') || json.count || json.length);
+                return {
+                    data: data,
+                    total: count
+                };
 
-        switch (type){
-        case GET_LIST:
-        case GET_MANY_REFERENCE:
-            // For rest_framework.pagination.LimitOffsetPagination for pagination,
-            const data = json.results || json;
-            const count = parseInt(headers.get('x-total-count') || json.count || json.length);
-            return {
-                data: data,
-                total: count
-            };
+            case DELETE:
+                if (status === 204) {
+                    return { data: { "id": params.id } };
+                }
+                throw new Error('Element not deleted');
 
-        case DELETE:
-            if( status === 204 ){
-                return { data: {"id": params.id} };
-            }
-            throw new Error('Element not deleted');
-
-        case CREATE:
-        case UPDATE:
-        case GET_ONE:
-            return {data: json};
-        default:
-            throw new Error(`Unsupported fetch action type ${type}`);
+            case CREATE:
+            case UPDATE:
+            case GET_ONE:
+                return { data: json };
+            default:
+                throw new Error(`Unsupported fetch action type ${type}`);
         }
     };
 
     const convertHTTPErrorToREST = (httpError) => {
-        const {status, body, name} = httpError;
+        const { status, body, name } = httpError;
 
-        if( typeof(body) === 'object' && body.detail){
+        if (typeof (body) === 'object' && body.detail) {
             httpError.message = body.detail;
         }
         return Promise.reject(httpError);
