@@ -55,6 +55,7 @@ export default (apiUrl, httpClient = fetchJsonWithToken) => {
                 // specify reverse orderings by prefixing the field name with '-'
                 const order = params.sort.order == 'DESC' ? '-' : '';
                 const field = params.sort.field || 'id';
+                const queryParams = params.queryParams || '';
                 const query = {
                     ...flattenObject(params.filter),
                     ordering: order + field,
@@ -64,6 +65,12 @@ export default (apiUrl, httpClient = fetchJsonWithToken) => {
                     offset: (page - 1) * perPage
                 };
                 url = `${apiUrl}/${resource}/?${stringify(query)}`;
+
+                // If there's extra query parameters given, add them to the url
+                if(queryParams) {
+                    url += `&${stringify(queryParams)}`;
+                }
+
                 options.method = 'GET';
                 break;
             }
@@ -130,7 +137,7 @@ export default (apiUrl, httpClient = fetchJsonWithToken) => {
     const convertHTTPErrorToREST = (httpError) => {
         const { status, body, name } = httpError;
 
-        if (typeof (body) === 'object' && body.detail) {
+        if (typeof (body) === 'object' && body.detail) {        
             httpError.message = body.detail;
         }
         return Promise.reject(httpError);
